@@ -2,7 +2,6 @@
 
 namespace top
 {
-
   struct p_t
   {
     int x, y;
@@ -31,11 +30,54 @@ namespace top
     p_t o;
     Dot(int x, int y);
   };
+
+  struct frame_t
+  {
+    p_t left_bot;
+    p_t right_top;
+  };
+
+
+  void make_f(IDrow** b, size_t k); //
+  void get_points(IDrow * b, p_t **ps, size_t & s); //
+  frame_t build_frame(const p_t * ps, size_t s); //
+  char * build_canvas(frame_t f); //
+  void paint_canvas(char * cnv, frame_t fr, const p_t * ps, size_t k, char f); //
+  void print_canvas(const char * cnv, frame_t fr); //
 }
 
 int main()
 {
   using namespace top;
+  IDrow* f[3] = {};
+  p_t * p = nullptr; size_t s = 0;
+  int err = 0;
+  char* cnv = nullptr;
+  try
+  {
+    make_f(f,3);
+    for (size_t i = 0; i < 3; ++i)
+    {
+      get_points(f[i], &p, s);
+    }
+    frame_t fr = build_frame(p, s);
+    cnv = build_canvas(fr);
+    paint_canvas(cnv, fr, p, s, '#');
+    print_canvas(cnv, fr);
+  }
+  catch(...)
+  {
+    err = 1;
+  }
+  delete f[0];
+  delete f[1];
+  delete f[2];
+  delete[] p;
+  delete[] cnv;
+
+
+  return err;
+  
 }
 
 top::Dot::Dot(int x, int y):
