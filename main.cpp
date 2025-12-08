@@ -7,7 +7,7 @@ namespace top
     int x, y;
   };
 
-  struct IDrow
+  struct IDraw
   {
     virtual p_t begin() const = 0;
     virtual p_t next(p_t) const = 0;
@@ -23,7 +23,7 @@ namespace top
     return !(a == b);
   }
 
-  struct Dot: IDrow
+  struct Dot: IDraw
   {
     p_t begin() const override;
     p_t next(p_t) const override;
@@ -38,8 +38,8 @@ namespace top
   };
 
 
-  void make_f(IDrow** b, size_t k); //
-  void get_points(IDrow * b, p_t **ps, size_t & s); //
+  void make_f(IDraw** b, size_t k); //
+  void get_points(IDraw * b, p_t **ps, size_t & s); //
   frame_t build_frame(const p_t * ps, size_t s); //
   char * build_canvas(frame_t f); //
   void paint_canvas(char * cnv, frame_t fr, const p_t * ps, size_t k, char f); //
@@ -49,7 +49,7 @@ namespace top
 int main()
 {
   using namespace top;
-  IDrow* f[3] = {};
+  IDraw* f[3] = {};
   p_t * p = nullptr; size_t s = 0;
   int err = 0;
   char* cnv = nullptr;
@@ -81,7 +81,7 @@ int main()
 }
 
 top::Dot::Dot(int x, int y):
-  IDrow(),
+  IDraw(),
   o{x,y}
 {}
 
@@ -94,3 +94,13 @@ top::p_t top::Dot::next(p_t) const
 {
   return begin();
 }
+
+void top::make_f(IDraw** b, size_t k)
+{
+  b[0] = new Dot(0,0);
+  b[1] = new Dot(-1,-5);
+  b[2] = new Dot(7,7);
+  
+}
+
+void top::get_points(IDraw * b, p_t** ps, size_t& s);
