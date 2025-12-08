@@ -41,6 +41,8 @@ namespace topit {
   // вывод двумперного массива на основе размеров, определяемых фреймом
   void flush(std::ostream& os, const char* cnv, f_t fr);
   void extend(p_t** pts, size_t s, p_t p);
+  size_t rows(f_t);
+  size_t cols(f_t);
 }
 
 
@@ -141,10 +143,49 @@ topit::f_t topit::frame(const p_t* pts, size_t s)
     minx = std::min(minx, pts[i].x);
     maxx = std::max(maxx, pts[i].x);
     miny = std::min(miny, pts[i].y);
-    maxy = std::maxy(maxy, pts[i].y);
+    maxy = std::max(maxy, pts[i].y);
   }
   p_t aa{minx, miny};
   p_t bb{maxx, maxy};
   return {aa, bb};
 }
 
+size_t topit::rows(f_t fr)
+{
+  return (fr.bb.y - fr.aa.y + 1);
+}
+
+size_t topit::cols(f_t fr)
+{
+  return (fr.bb.x - fr.aa.x + 1);
+}
+
+char* topit::canvas(f_t fr, char fill)
+{
+  char* cnv = new char[rows(fr) * cols(fr)];
+  for (size_t i = 0; i < rows(fr) * cols(fr); ++i)
+  {
+    cnv[i] = fill;
+  }
+  return cnv;
+}
+
+void topit::paint(char* cnv, f_t fr, p_t p, char fill)
+{
+  int dx = p.x - fr.aa.x;
+  int dy = fr.bb.y - p.y;
+  cnv[dy * cols(fr) + dx] = fill;
+}
+
+
+void topit::flush(std::ostream& os, const char* cnv, f_t fr)
+{
+  for (size_t i = 0; i < rows(fr); ++i)
+  {
+    for (size_t j = 0; j < cols(fr); ++j)
+    {
+      os <<cnv[i * cols(fr) + j];
+    }
+    os << '\n';
+  }
+}
