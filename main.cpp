@@ -1,106 +1,129 @@
 #include <iostream>
+namespace topit {
+  struct p_t { int x, y; };
+  bool operator==(p_t, p_t);
+  bool operator!=(p_t, p_t);
+  struct f_t { p_t aa, bb; };
 
-namespace top
-{
-  struct p_t
-  {
-    int x, y;
-  };
-
-  struct IDraw
-  {
+  struct IDraw {
+    virtual ~IDraw() = default;
     virtual p_t begin() const = 0;
     virtual p_t next(p_t) const = 0;
   };
 
-  bool operator==(p_t a, p_t b)
-  {
-    return a.x == b.x && a.y == b.y;
-  }
-
-  bool operator!=(p_t a, p_t b)
-  {
-    return !(a == b);
-  }
-
-  struct Dot: IDraw
-  {
+  struct Dot: IDraw {
+    Dot(int x, int y);
+    explicit Dot(p_t dd);
     p_t begin() const override;
     p_t next(p_t) const override;
-    p_t o;
-    Dot(int x, int y);
+    p_t d;
   };
+  // Домашнее задание:
+  // - Добавить ещё 2-3 фигуры:
+  //   - Вертикальный отрезок
+  //   - Горизонтальный отрезок
+  //   - Диагональ под 45 заданной длины
+  //   - Придумать свою фигуру
 
-  struct frame_t
-  {
-    p_t left_bot;
-    p_t right_top;
-  };
+  // расширять заданный массив точками из очередной фигуры
+  // - extend...
+  size_t points(const IDraw& d, p_t** pts, size_t s);
 
+  // найти минимум и максимум по каждой координате среди точек и сформировать фрейм
+  f_t frame(const p_t* pts, size_t s);
 
-  void make_f(IDraw** b, size_t k); //
-  void get_points(IDraw * b, p_t **ps, size_t & s); //
-  frame_t build_frame(const p_t * ps, size_t s); //
-  char * build_canvas(frame_t f); //
-  void paint_canvas(char * cnv, frame_t fr, const p_t * ps, size_t k, char f); //
-  void print_canvas(const char * cnv, frame_t fr); //
+  // построить полотно (из фрейма получить количество столбцов и колонок)
+  char * canvas(f_t fr, char fill);
+
+  // координаты точки перевести в координаты в двумерном массиве
+  void paint(char* cnv, f_t fr, p_t p, char fill);
+
+  // вывод двумперного массива на основе размеров, определяемых фреймом
+  void flush(std::ostream& os, const char* cnv, f_t fr);
+  void extend(p_t** pts, size_t s, p_t p);
 }
 
-int main()
-{
-  using namespace top;
-  IDraw* f[3] = {};
-  p_t * p = nullptr; size_t s = 0;
+
+
+int main() {
+  using topit::IDraw;
+  using topit::Dot;
+  using topit::f_t;
+  using topit::p_t;
   int err = 0;
-  char* cnv = nullptr;
-  try
-  {
-    make_f(f,3);
-    for (size_t i = 0; i < 3; ++i)
-    {
-      get_points(f[i], &p, s);
+  IDraw* shps[3] = {};
+  p_t * pts = nullptr;
+  size_t s = 0;
+  try {
+    shps[0] = new Dot(0, 0);
+    shps[1] = new Dot(5, 7);
+    shps[2] = new Dot(-5, -2);
+    for (size_t i = 0; i < 3; ++i) {
+      s += points(*(shps[i]), &pts, s);
     }
-    frame_t fr = build_frame(p, s);
-    cnv = build_canvas(fr);
-    paint_canvas(cnv, fr, p, s, '#');
-    print_canvas(cnv, fr);
+    f_t fr = frame(pts, s);
+    char * cnv = canvas(fr, '.');
+    for (size_t i = 0; i < s; ++i) {
+      paint(cnv, fr, pts[i], '#');
+    }
+    flush(std::cout, cnv, fr);
+    delete [] cnv;
+  } catch (...) {
+    err = 2;
+    std::cerr << "Bad drawing\n";
   }
-  catch(...)
-  {
-    err = 1;
-  }
-  delete f[0];
-  delete f[1];
-  delete f[2];
-  delete[] p;
-  delete[] cnv;
-
-
+  delete [] pts;
+  delete shps[0];
+  delete shps[1];
+  delete shps[2];
   return err;
-  
 }
-
-top::Dot::Dot(int x, int y):
-  IDraw(),
-  o{x,y}
+topit::Dot::Dot(p_t dd):
+ IDraw(),
+ d{dd}
 {}
-
-top::p_t top::Dot::begin() const
-{
-  return o;
+topit::Dot::Dot(int x, int y):
+ IDraw(),
+ d{x, y}
+{}
+topit::p_t topit::Dot::begin() const {
+  return d;
+}
+topit::p_t topit::Dot::next(p_t prev) const {
+  if (prev != begin()) {
+    throw std::logic_error("bad impl");
+  }
+  return d;
+}
+bool topit::operator==(p_t a, p_t b) {
+  return a.x == b.x && a.y == b.y;
+}
+bool topit::operator!=(p_t a, p_t b) {
+  return !(a == b);
 }
 
-top::p_t top::Dot::next(p_t) const
+void topit::extend(p_t** pts, size_t s, p_t p)
 {
-  return begin();
+  p_t* res = new p_t[s+1];
+  for (size_t i = 0; i < s; ++i)
+  {
+    res[i] = (*pts)[i];
+  }
+  res[s] = p;
+  delete[] *pts;
+  *pts = res;
 }
-
-void top::make_f(IDraw** b, size_t k)
+size_t topit::points(const IDraw& d, p_t** pts, size_t s)
 {
-  b[0] = new Dot(0,0);
-  b[1] = new Dot(-1,-5);
-  b[2] = new Dot(7,7);
-  
-}
+  p_t p = d.begin();
+  extend(pts, s, p);
+  size_t delta = 1;
 
-void top::get_points(IDraw * b, p_t** ps, size_t& s);
+  while (d.next(p) != d.begin())  
+  {
+    p = d.next(p);
+    extend(pts, s + delta, p);
+    ++delta;
+  }
+  return delta;  
+}
