@@ -18,6 +18,37 @@ namespace topit {
     p_t next(p_t) const override;
     p_t d;
   };
+
+  struct HorizontalLine: IDraw
+  {
+    HorizontalLine(int x, int y, int len);
+    HorizontalLine(p_t dd, int len);
+    p_t begin() const override;
+    p_t next(p_t) const override;
+    p_t d;
+    int len;
+  };
+
+  struct VerticallLine: IDraw
+  {
+    VerticallLine(int x, int y, int len);
+    VerticallLine(p_t dd, int len);
+    p_t begin() const override;
+    p_t next(p_t) const override;
+    p_t d;
+    int len;
+  };
+
+  struct SlopingLine: IDraw
+  {
+    SlopingLine(int x, int y, int len);
+    SlopingLine(p_t dd, int len);
+    p_t begin() const override;
+    p_t next(p_t) const override;
+    p_t d;
+    int len;
+  };
+
   // Домашнее задание:
   // - Добавить ещё 2-3 фигуры:
   //   - Вертикальный отрезок
@@ -40,6 +71,8 @@ namespace topit {
 
   // вывод двумперного массива на основе размеров, определяемых фреймом
   void flush(std::ostream& os, const char* cnv, f_t fr);
+
+
   void extend(p_t** pts, size_t s, p_t p);
   size_t rows(f_t);
   size_t cols(f_t);
@@ -50,21 +83,24 @@ namespace topit {
 int main() {
   using topit::IDraw;
   using topit::Dot;
+  using topit::HorizontalLine;
+  using topit::VerticallLine;
   using topit::f_t;
   using topit::p_t;
+  using topit::SlopingLine;
   int err = 0;
   IDraw* shps[3] = {};
   p_t * pts = nullptr;
   size_t s = 0;
   try {
-    shps[0] = new Dot(0, 0);
-    shps[1] = new Dot(5, 7);
-    shps[2] = new Dot(-5, -2);
+    shps[0] = new SlopingLine(0,0,5);
+    shps[1] = new VerticallLine(5, 7, -2);
+    shps[2] = new HorizontalLine(-5, -2, 1);
     for (size_t i = 0; i < 3; ++i) {
       s += points(*(shps[i]), &pts, s);
     }
     f_t fr = frame(pts, s);
-    char * cnv = canvas(fr, '.');
+    char * cnv = canvas(fr, ' ');
     for (size_t i = 0; i < s; ++i) {
       paint(cnv, fr, pts[i], '#');
     }
@@ -97,6 +133,115 @@ topit::p_t topit::Dot::next(p_t prev) const {
   }
   return d;
 }
+
+topit::HorizontalLine::HorizontalLine(int x, int y, int len):
+  IDraw(),
+  d({x,y}),
+  len(len)
+{
+  if (len == 0)
+  {
+    throw std::logic_error("The length cannot be equal to 0");
+  }
+}
+topit::HorizontalLine::HorizontalLine(p_t dd, int len):
+  IDraw(),
+  d(dd),
+  len(len)
+{
+    if (len == 0)
+  {
+    throw std::logic_error("The length cannot be equal to 0");
+  }
+}
+topit::p_t topit::HorizontalLine::begin() const
+{
+  return d;
+}
+topit::p_t topit::HorizontalLine::next(p_t prev) const
+{
+  if (begin().x + len - (len > 0 ? 1 : -1) == prev.x)
+  {
+    return begin();
+  }
+  else
+  {
+    return {prev.x + (len > 0 ? 1 : -1), prev.y};
+  }
+}
+
+topit::VerticallLine::VerticallLine(int x, int y, int len):
+  IDraw(),
+  d({x,y}),
+  len(len)
+{
+    if (len == 0)
+  {
+    throw std::logic_error("The length cannot be equal to 0");
+  }
+}
+topit::VerticallLine::VerticallLine(p_t dd, int len):
+  IDraw(),
+  d(dd),
+  len(len)
+{
+    if (len == 0)
+  {
+    throw std::logic_error("The length cannot be equal to 0");
+  }
+}
+topit::p_t topit::VerticallLine::begin() const
+{
+  return d;
+}
+topit::p_t topit::VerticallLine::next(p_t prev) const
+{
+  if (begin().y + len - (len > 0 ? 1 : -1) == prev.y)
+  {
+    return begin();
+  }
+  else
+  {
+    return {prev.x, prev.y + (len > 0 ? 1 : -1)};
+  }
+}
+
+topit::SlopingLine::SlopingLine(int x, int y, int len):
+  IDraw(),
+  d({x,y}),
+  len(len)
+{
+    if (len == 0)
+  {
+    throw std::logic_error("The length cannot be equal to 0");
+  }
+}
+topit::SlopingLine::SlopingLine(p_t dd, int len):
+  IDraw(),
+  d(dd),
+  len(len)
+{
+    if (len == 0)
+  {
+    throw std::logic_error("The length cannot be equal to 0");
+  }
+}
+topit::p_t topit::SlopingLine::begin() const
+{
+  return d;
+}
+topit::p_t topit::SlopingLine::next(p_t prev) const
+{
+  if (begin().y + len - (len > 0 ? 1 : -1) == prev.y)
+  {
+    return begin();
+  }
+  else
+  {
+    return {prev.x + (len > 0 ? 1 : -1), prev.y + (len > 0 ? 1 : -1)};
+  }
+}
+
 bool topit::operator==(p_t a, p_t b) {
   return a.x == b.x && a.y == b.y;
 }
@@ -115,6 +260,7 @@ void topit::extend(p_t** pts, size_t s, p_t p)
   delete[] *pts;
   *pts = res;
 }
+
 size_t topit::points(const IDraw& d, p_t** pts, size_t s)
 {
   p_t p = d.begin();
