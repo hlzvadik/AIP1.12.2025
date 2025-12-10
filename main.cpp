@@ -1,17 +1,20 @@
 #include <iostream>
-namespace topit {
+namespace topit 
+{
   struct p_t { int x, y; };
   bool operator==(p_t, p_t);
   bool operator!=(p_t, p_t);
   struct f_t { p_t aa, bb; };
 
-  struct IDraw {
+  struct IDraw 
+  {
     virtual ~IDraw() = default;
     virtual p_t begin() const = 0;
     virtual p_t next(p_t) const = 0;
   };
 
-  struct Dot: IDraw {
+  struct Dot: IDraw 
+  {
     Dot(int x, int y);
     explicit Dot(p_t dd);
     p_t begin() const override;
@@ -69,36 +72,15 @@ namespace topit {
     int a, b;
   };
 
-  // Домашнее задание:
-  // - Добавить ещё 2-3 фигуры:
-  //   - Вертикальный отрезок
-  //   - Горизонтальный отрезок
-  //   - Диагональ под 45 заданной длины
-  //   - Придумать свою фигуру
-
-  // расширять заданный массив точками из очередной фигуры
-  // - extend...
   size_t points(const IDraw& d, p_t** pts, size_t s);
-
-  // найти минимум и максимум по каждой координате среди точек и сформировать фрейм
   f_t frame(const p_t* pts, size_t s);
-
-  // построить полотно (из фрейма получить количество столбцов и колонок)
   char * canvas(f_t fr, char fill);
-
-  // координаты точки перевести в координаты в двумерном массиве
   void paint(char* cnv, f_t fr, p_t p, char fill);
-
-  // вывод двумперного массива на основе размеров, определяемых фреймом
   void flush(std::ostream& os, const char* cnv, f_t fr);
-
-
   void extend(p_t** pts, size_t s, p_t p);
   size_t rows(f_t);
   size_t cols(f_t);
 }
-
-
 
 int main() {
   using topit::IDraw;
@@ -495,7 +477,6 @@ void topit::paint(char* cnv, f_t fr, p_t p, char fill)
   int dy = fr.bb.y - p.y;
   cnv[dy * cols(fr) + dx] = fill;
 }
-
 
 void topit::flush(std::ostream& os, const char* cnv, f_t fr)
 {
