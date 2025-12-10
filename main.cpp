@@ -49,6 +49,26 @@ namespace topit {
     int len;
   };
 
+  struct Square: IDraw
+  {
+    Square(int x, int y, int a);
+    Square(p_t dd, int a);
+    p_t begin() const override;
+    p_t next(p_t) const override;
+    p_t d;
+    int a;
+  };
+
+  struct Rectangle: IDraw
+  {
+    Rectangle(int x, int y, int a, int b);
+    Rectangle(p_t d, int a, int b);
+    p_t begin() const override;
+    p_t next(p_t) const override;
+    p_t d;
+    int a, b;
+  };
+
   // Домашнее задание:
   // - Добавить ещё 2-3 фигуры:
   //   - Вертикальный отрезок
@@ -85,18 +105,24 @@ int main() {
   using topit::Dot;
   using topit::HorizontalLine;
   using topit::VerticallLine;
+  using topit::SlopingLine;
+  using topit::Square;
+  using topit::Rectangle;
   using topit::f_t;
   using topit::p_t;
-  using topit::SlopingLine;
   int err = 0;
-  IDraw* shps[3] = {};
+  size_t count = 6;
+  IDraw* shps[count] = {};
   p_t * pts = nullptr;
   size_t s = 0;
   try {
-    shps[0] = new SlopingLine(0,0,5);
-    shps[1] = new VerticallLine(5, 7, -2);
-    shps[2] = new HorizontalLine(-5, -2, 1);
-    for (size_t i = 0; i < 3; ++i) {
+      shps[0] = new Dot(0,0);
+      shps[1] = new HorizontalLine(2,0,5);
+      shps[2] = new VerticallLine(8,0,5);
+      shps[3] = new SlopingLine(10,0,5);
+      shps[4] = new Square(16,0,5);
+      shps[5] = new Rectangle(22,0,5,6);
+    for (size_t i = 0; i < count; ++i) {
       s += points(*(shps[i]), &pts, s);
     }
     f_t fr = frame(pts, s);
@@ -111,9 +137,10 @@ int main() {
     std::cerr << "Bad drawing\n";
   }
   delete [] pts;
-  delete shps[0];
-  delete shps[1];
-  delete shps[2];
+  for (size_t i = 0; i < count; ++i)
+  {
+    delete shps[i];
+  }
   return err;
 }
 topit::Dot::Dot(p_t dd):
@@ -124,10 +151,12 @@ topit::Dot::Dot(int x, int y):
  IDraw(),
  d{x, y}
 {}
-topit::p_t topit::Dot::begin() const {
+topit::p_t topit::Dot::begin() const
+{
   return d;
 }
-topit::p_t topit::Dot::next(p_t prev) const {
+topit::p_t topit::Dot::next(p_t prev) const
+{
   if (prev != begin()) {
     throw std::logic_error("bad impl");
   }
@@ -239,6 +268,150 @@ topit::p_t topit::SlopingLine::next(p_t prev) const
   else
   {
     return {prev.x + (len > 0 ? 1 : -1), prev.y + (len > 0 ? 1 : -1)};
+  }
+}
+
+topit::Square::Square(int x, int y, int a):
+  d({x, y}),
+  a(a)
+{
+  if (a <= 0)
+  {
+    throw std::logic_error("The length cannot be less then 0 or equal 0");
+  }
+}
+topit::Square::Square(p_t dd, int a):
+  d(dd),
+  a(a)
+{
+  if (a <= 0)
+  {
+    throw std::logic_error("The length cannot be less then 0 or equal 0");
+  }
+}
+topit::p_t topit::Square::begin() const
+{
+  return d;
+}
+topit::p_t topit::Square::next(p_t prev) const
+{
+  if (a == 1)
+  {
+    return begin();
+  }
+  if (prev.x == begin().x)
+  {
+    if (prev.y == begin().y + a - 1)
+    {
+      return {prev.x + 1, prev.y};
+    }
+    else
+    {
+      return {prev.x, prev.y + 1};  
+    }
+  }
+  else if (prev.y == begin().y + a - 1)
+  {
+    if (prev.x == begin().x + a - 1)
+    {
+      return {prev.x, prev.y - 1};
+    }
+    else
+    {
+      return {prev.x + 1, prev.y};
+    }
+  }
+  else if (prev.x == begin().x + a - 1)
+  {
+    if (prev.y == begin().y)
+    {
+      return {prev.x - 1, prev.y};
+    }
+    else
+    {
+      return {prev.x, prev.y - 1};
+    }
+  }
+  else
+  {
+    return {prev.x - 1, prev.y};
+  }
+}
+
+topit::Rectangle::Rectangle(int x, int y, int a, int b):
+  d({x, y}),
+  a(a),
+  b(b)
+{
+  if (a <= 0 || b <= 0)
+  {
+    throw std::logic_error("The length cannot be less then 0 or equal 0");
+  }
+}
+topit::Rectangle::Rectangle(p_t dd, int a, int b):
+  d(dd),
+  a(a),
+  b(b)
+{
+  if (a <= 0 || b <= 0)
+  {
+    throw std::logic_error("The length cannot be less then 0 or equal 0");
+  }
+}
+topit::p_t topit::Rectangle::begin() const
+{
+  return d;
+}
+topit::p_t topit::Rectangle::next(p_t prev) const
+{
+  if (a == 1 && b == 1)
+  {
+    return begin();
+  }
+  if (prev.x == begin().x)
+  {
+    if (prev.y == begin().y + a - 1)
+    {
+      if (b == 1)
+      {
+        return begin();
+      }
+      return {prev.x + 1, prev.y};
+    }
+    else
+    {
+      return {prev.x, prev.y + 1};  
+    }
+  }
+  else if (prev.y == begin().y + a - 1)
+  {
+    if (prev.x == begin().x + b - 1)
+    {
+      if (a == 1)
+      {
+        return begin();
+      }
+      return {prev.x, prev.y - 1};
+    }
+    else
+    {
+      return {prev.x + 1, prev.y};
+    }
+  }
+  else if (prev.x == begin().x + b - 1)
+  {
+    if (prev.y == begin().y)
+    {
+      return {prev.x - 1, prev.y};
+    }
+    else
+    {
+      return {prev.x, prev.y - 1};
+    }
+  }
+  else
+  {
+    return {prev.x - 1, prev.y};
   }
 }
 
